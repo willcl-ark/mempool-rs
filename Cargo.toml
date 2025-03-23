@@ -1,0 +1,12 @@
+[package]
+name = "mempool-rs"
+version = "0.1.0"
+edition = "2024"
+authors = ["Will <will@256k1.dev>"]
+description = "Parse v1 & v2 Bitcoin Core mempool.dat files"
+
+[dependencies]
+clap = { version = "4.5.32", features = ["derive"] }
+byteorder = "1.5.0"
+thiserror = "2.0.12"
+bitcoin = { version = "0.32.5", features = ["serde"] }
