@@ -62,6 +62,8 @@ It features a two-panel layout:
 - Left: Transaction list by (w)txid with search
 - Right: Transaction inspector
 
+![TUI Screenshot](img/tui.png)
+
 ### TUI Navigation
 
 The TUI uses vim-like modal editing with Normal and Insert modes:
