@@ -10,3 +10,5 @@ clap = { version = "4.5.32", features = ["derive"] }
 byteorder = "1.5.0"
 thiserror = "2.0.12"
 bitcoin = { version = "0.32.5", features = ["serde"] }
+ratatui = "0.29.0"
+crossterm = "0.28.1"

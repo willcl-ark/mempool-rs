@@ -112,6 +112,10 @@ impl Mempool {
     pub fn get_file_header(&self) -> &FileHeader {
         &self.header
     }
+
+    pub fn get_xor_key(&self) -> Option<&[u8]> {
+        self.xor_key.as_deref()
+    }
 }
 
 pub fn read_mempool_from_path<P: AsRef<Path>>(path: P) -> Result<Mempool, MempoolError> {
@@ -123,21 +127,16 @@ pub fn read_mempool_from_path<P: AsRef<Path>>(path: P) -> Result<Mempool, Mempoo
         .read_u64::<LittleEndian>()
         .map_err(|e| MempoolError::HeaderRead(format!("Failed to read version: {}", e)))?;
 
-    println!("Mempool file version: {}", version);
-
     let xor_key = if version == MEMPOOL_V2_FORMAT {
         let mut size_buf = [0u8; 1];
         reader
             .read_exact(&mut size_buf)
             .map_err(|e| MempoolError::XorKeyRead(format!("Failed to read XOR key size: {}", e)))?;
         let key_size = size_buf[0] as usize;
-        println!("XOR key size: {} bytes", key_size);
-
         let mut key = vec![0u8; key_size];
         reader.read_exact(&mut key).map_err(|e| {
             MempoolError::XorKeyRead(format!("Failed to read XOR key from mempool file: {}", e))
         })?;
-        println!("XOR key: {:02x?}", &key);
         Some(key)
     } else {
         None
@@ -150,8 +149,6 @@ pub fn read_mempool_from_path<P: AsRef<Path>>(path: P) -> Result<Mempool, Mempoo
     let num_tx = xor_reader
         .read_u64_le()
         .map_err(|e| MempoolError::HeaderRead(format!("Failed to read tx count: {}", e)))?;
-
-    println!("Number of transactions: {}", num_tx);
 
     let header = FileHeader::new(version, num_tx);
     let mut entries = Vec::with_capacity(num_tx as usize);

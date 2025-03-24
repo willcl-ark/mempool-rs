@@ -3,7 +3,9 @@ use std::path::PathBuf;
 
 mod mempool;
 mod stream;
+mod tui;
 use mempool::{MempoolError, read_mempool_from_path};
+use tui::TuiApp;
 
 #[derive(Parser)]
 #[command(author, version, about = "Bitcoin Core mempool.dat file parser")]
@@ -30,6 +32,9 @@ enum Commands {
         #[clap(long, short)]
         compact: bool,
     },
+
+    /// Interactive TUI mode with transaction browser
+    Interact,
 }
 
 fn main() -> Result<(), MempoolError> {
@@ -51,6 +56,31 @@ fn main() -> Result<(), MempoolError> {
                 } else {
                     println!("[{}] {:#}", i, entry);
                 }
+            }
+        }
+        Some(Commands::Interact) => {
+            // Format header information for display in the popup
+            let header = mempool.get_file_header();
+
+            // Only show XOR key for V2 format
+            let xor_key_display = if header.version == 2 {
+                match mempool.get_xor_key() {
+                    Some(key) => format!("XOR key: {:02x?}", key),
+                    None => "XOR key: Not found".to_string(),
+                }
+            } else {
+                "".to_string() // No XOR key in V1 format
+            };
+
+            let header_info = format!(
+                "Version: {}\nNumber of transactions: {}\n{}",
+                header.version, header.num_tx, xor_key_display
+            );
+
+            let entries = mempool.get_mempool_entries();
+            let mut app = TuiApp::new(entries, header_info);
+            if let Err(err) = app.run() {
+                eprintln!("Error running TUI: {}", err);
             }
         }
         None => {}
